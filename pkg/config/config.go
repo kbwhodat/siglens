@@ -443,6 +443,12 @@ func GetQueryPort() uint64 {
 	return runningConfig.QueryPort
 }
 
+// GetQueryHardLimitSecs: a query still running after this many seconds stops the server, which flushes and exits so
+// its supervisor restarts it (0 = off). Queries that ignore cancellation can otherwise spin a core indefinitely.
+func GetQueryHardLimitSecs() int {
+	return runningConfig.QueryHardLimitSecs
+}
+
 // GetListenAddress is the address the ingest and query servers bind to (listenAddress, default 0.0.0.0).
 func GetListenAddress() string {
 	if runningConfig.ListenAddress == "" {

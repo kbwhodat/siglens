@@ -97,6 +97,7 @@ type Configuration struct {
 	IngestPort                  uint64 `yaml:"ingestPort"`                  // Port for ingestion server
 	QueryPort                   uint64 `yaml:"queryPort"`                   // Port used for query server
 	ListenAddress               string `yaml:"listenAddress"`               // Address both servers bind to (default 0.0.0.0)
+	QueryHardLimitSecs          int    `yaml:"queryHardLimitSecs"`          // A query running longer restarts the server (0 = off)
 	QueryNode                   string `yaml:"queryNode"`                   // Node to enable/disable all query endpoints
 	IngestNode                  string `yaml:"ingestNode"`                  // Node to enable/disable all ingest endpoints
 	IdleWipFlushIntervalSecs    int    `yaml:"idleWipFlushIntervalSecs"`    // Time interval after which to write to segfile, given no new data

@@ -8,8 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
+	"syscall"
+	"time"
 
 	dtu "github.com/siglens/siglens/pkg/common/dtypeutils"
+	"github.com/siglens/siglens/pkg/config"
 	putils "github.com/siglens/siglens/pkg/integrations/prometheus/utils"
 	rutils "github.com/siglens/siglens/pkg/readerUtils"
 	agg "github.com/siglens/siglens/pkg/segment/aggregations"
@@ -521,6 +525,17 @@ func ExecuteQuery(root *structs.ASTNode, aggs *structs.QueryAggregators, qid uin
 
 func ExecuteQueryInternalNewPipeline(qid uint64, isAsync bool, root *structs.ASTNode, aggs *structs.QueryAggregators,
 	qc *structs.QueryContext, rQuery *query.RunningQueryState, sizeLimit uint64) {
+	// Paged Out fork: a query past the hard limit stops the server (graceful flush, then exit) for its supervisor to
+	// restart; the pipeline does not honour cancellation, so this is the only bound on a runaway query.
+	if limit := config.GetQueryHardLimitSecs(); limit > 0 {
+		watchdog := time.AfterFunc(time.Duration(limit)*time.Second, func() {
+			log.Errorf("qid=%v, ExecuteQueryInternalNewPipeline: query exceeded the %v s hard limit; restarting", qid, limit)
+			_ = syscall.Kill(os.Getpid(), syscall.SIGTERM)
+			time.Sleep(15 * time.Second)
+			os.Exit(3)
+		})
+		defer watchdog.Stop()
+	}
 	// Paged Out fork: a panic inside one query fails that query, never the whole server.
 	defer func() {
 		if r := recover(); r != nil {
