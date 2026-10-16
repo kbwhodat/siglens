@@ -235,8 +235,8 @@ func StartSiglensServer(nodeType commonconfig.DeploymentType, nodeID string) err
 	usageStats.StartUsageStats()
 	ingestNode := config.IsIngestNode()
 	queryNode := config.IsQueryNode()
-	ingestServer := "0.0.0.0:" + fmt.Sprintf("%d", config.GetIngestPort())
-	queryServer := "0.0.0.0:" + fmt.Sprintf("%d", config.GetQueryPort())
+	ingestServer := config.GetListenAddress() + ":" + fmt.Sprintf("%d", config.GetIngestPort())
+	queryServer := config.GetListenAddress() + ":" + fmt.Sprintf("%d", config.GetQueryPort())
 
 	if config.IsTlsEnabled() && (config.GetTLSCertificatePath() == "" || config.GetTLSPrivateKeyPath() == "") {
 		fmt.Println("TLS is enabled but certificate or private key path is not provided")

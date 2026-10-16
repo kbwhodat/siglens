@@ -5,6 +5,7 @@ package hooks
 
 import (
 	htmltemplate "html/template"
+	"path/filepath"
 	texttemplate "text/template"
 
 	"github.com/fasthttp/router"
@@ -168,6 +169,10 @@ type JsSnippets struct {
 
 var GlobalHooks = Hooks{
 	ParseTemplatesHook: func(htmlTemplate *htmltemplate.Template, textTemplate *texttemplate.Template) {
+		// Paged Out fork: the UI is optional; without ./static the server answers its APIs only.
+		if matches, _ := filepath.Glob("./static/*.html"); len(matches) == 0 {
+			return
+		}
 		*htmlTemplate = *htmltemplate.Must(htmlTemplate.ParseGlob("./static/*.html"))
 		*textTemplate = *texttemplate.Must(textTemplate.ParseGlob("./static/js/*.js"))
 	},

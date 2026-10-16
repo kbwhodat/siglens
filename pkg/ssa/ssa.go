@@ -92,6 +92,10 @@ func FetchIPAddressDetails() (IPAddressDetails, error) {
 	return details, nil
 }
 func InitSsa() {
+	// Paged Out fork: usage analytics and the ipinfo.io lookup are disabled unconditionally (no outbound calls).
+	if true {
+		return
+	}
 
 	currClient, err := analytics.NewWithConfig(segmentKey,
 		analytics.Config{

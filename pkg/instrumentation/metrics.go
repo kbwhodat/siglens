@@ -41,7 +41,7 @@ func InitMetrics() {
 
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {
-		err := http.ListenAndServe(":2222", nil)
+		err := http.ListenAndServe(conf.GetListenAddress()+":2222", nil)
 		if err != nil {
 			log.Errorf("InitMetrics: Failed to start Prometheus exporter on :2222 with error: %v", err)
 		}

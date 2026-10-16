@@ -1934,13 +1934,13 @@ func Test_StatisticExpr(t *testing.T) {
 		BucketKey:   []string{"PUT", "501", "Monday", "NH", "Femali", "sig_test"},
 	}
 
-	// Test Sorting func. If use the limit option, only the last limit lexicographical of the <field-list> is returned in the search results
+	// Test Sorting func. rare limit=2 keeps the two least frequent combinations (111, then 222)
 	results := append(make([]*BucketResult, 0), bucketResult1, bucketResult2, bucketResult3)
 	err = statisticExpr.SortBucketResult(&results)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(results))
 	assert.Equal(t, bucketResult2, results[0])
-	assert.Equal(t, bucketResult1, results[1])
+	assert.Equal(t, bucketResult3, results[1])
 }
 
 func TestFormatTime(t *testing.T) {

@@ -521,6 +521,13 @@ func ExecuteQuery(root *structs.ASTNode, aggs *structs.QueryAggregators, qid uin
 
 func ExecuteQueryInternalNewPipeline(qid uint64, isAsync bool, root *structs.ASTNode, aggs *structs.QueryAggregators,
 	qc *structs.QueryContext, rQuery *query.RunningQueryState, sizeLimit uint64) {
+	// Paged Out fork: a panic inside one query fails that query, never the whole server.
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("qid=%v, ExecuteQueryInternalNewPipeline: recovered from panic: %v", qid, r)
+			rQuery.StateChan <- &query.QueryStateChanData{StateName: query.ERROR, Error: fmt.Errorf("query failed: %v", r), Qid: qid}
+		}
+	}()
 	queryProcessor, err := SetupPipeResQuery(root, aggs, qid, qc, qc.Scroll, sizeLimit)
 	if err != nil {
 		log.Errorf("qid=%v, ExecuteQueryInternalNewPipeline: failed to SetupPipeResQuery, err: %v", qid, err)

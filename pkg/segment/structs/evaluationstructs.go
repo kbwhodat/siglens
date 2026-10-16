@@ -2251,15 +2251,24 @@ func (self *StatisticExpr) SortBucketResult(results *[]*BucketResult) error {
 			//Fields combination does not exist
 			if !combinationExist {
 				combinationCount++
-				if combinationCount > limit {
-					*results = newResults
-					return nil
-				}
 				newResults = append(newResults, bucketResult)
 			} else {
 				newResults[combinationCount-1].ElemCount += bucketResult.ElemCount
 			}
 		}
+		// Paged Out fork: limit keeps the N most (top) or least (rare) frequent combinations, as SPL defines it,
+		// not the last N in value order; ties keep value order.
+		switch self.StatisticFunctionMode {
+		case SFMTop:
+			sort.SliceStable(newResults, func(i, j int) bool { return newResults[i].ElemCount > newResults[j].ElemCount })
+		case SFMRare:
+			sort.SliceStable(newResults, func(i, j int) bool { return newResults[i].ElemCount < newResults[j].ElemCount })
+		}
+		if len(newResults) > limit {
+			newResults = newResults[:limit]
+		}
+		*results = newResults
+		return nil
 
 	} else { //No limit option, sort results by its values frequency
 		switch self.StatisticFunctionMode {

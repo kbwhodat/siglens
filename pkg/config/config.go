@@ -443,6 +443,14 @@ func GetQueryPort() uint64 {
 	return runningConfig.QueryPort
 }
 
+// GetListenAddress is the address the ingest and query servers bind to (listenAddress, default 0.0.0.0).
+func GetListenAddress() string {
+	if runningConfig.ListenAddress == "" {
+		return "0.0.0.0"
+	}
+	return runningConfig.ListenAddress
+}
+
 func GetDataPath() string {
 	return runningConfig.DataPath
 }

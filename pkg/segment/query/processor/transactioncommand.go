@@ -4,6 +4,8 @@
 package processor
 
 import (
+	"errors"
+
 	"github.com/siglens/siglens/pkg/segment/query/iqr"
 	"github.com/siglens/siglens/pkg/segment/structs"
 )
@@ -12,16 +14,15 @@ type transactionProcessor struct {
 	options *structs.TransactionArguments
 }
 
+// Paged Out fork: the command is not implemented in this pipeline; report it instead of crashing the server.
 func (p *transactionProcessor) Process(iqr *iqr.IQR) (*iqr.IQR, error) {
-	panic("not implemented")
+	return nil, errors.New("transaction command is not supported")
 }
 
 func (p *transactionProcessor) Rewind() {
-	panic("not implemented")
 }
 
 func (p *transactionProcessor) Cleanup() {
-	panic("not implemented")
 }
 
 func (p *transactionProcessor) GetFinalResultIfExists() (*iqr.IQR, bool) {
