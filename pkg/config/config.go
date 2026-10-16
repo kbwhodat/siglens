@@ -449,6 +449,14 @@ func GetQueryHardLimitSecs() int {
 	return runningConfig.QueryHardLimitSecs
 }
 
+// GetMetricsPort is the exporter port: metricsPort, default 2222; a negative value turns the exporter off.
+func GetMetricsPort() int {
+	if runningConfig.MetricsPort == 0 {
+		return 2222
+	}
+	return runningConfig.MetricsPort
+}
+
 // GetListenAddress is the address the ingest and query servers bind to (listenAddress, default 0.0.0.0).
 func GetListenAddress() string {
 	if runningConfig.ListenAddress == "" {

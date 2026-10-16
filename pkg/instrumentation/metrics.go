@@ -5,6 +5,7 @@ package instrumentation
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -39,15 +40,18 @@ func InitMetrics() {
 	commonAttributes = append(commonAttributes, attribute.String("hostname", conf.GetHostID()))
 	log.Infof("InitMetrics: Added hostname %s as a common attribute to all metrics", conf.GetHostID())
 
-	http.Handle("/metrics", promhttp.Handler())
-	go func() {
-		err := http.ListenAndServe(conf.GetListenAddress()+":2222", nil)
-		if err != nil {
-			log.Errorf("InitMetrics: Failed to start Prometheus exporter on :2222 with error: %v", err)
-		}
-	}()
-
-	log.Infof("InitMetrics: OpenTelemetry Prometheus exporter running on :2222")
+	// Paged Out fork: metricsPort (default 2222, negative = no listener), bound to listenAddress.
+	if port := conf.GetMetricsPort(); port > 0 {
+		address := fmt.Sprintf("%v:%d", conf.GetListenAddress(), port)
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			err := http.ListenAndServe(address, nil)
+			if err != nil {
+				log.Errorf("InitMetrics: Failed to start Prometheus exporter on %v with error: %v", address, err)
+			}
+		}()
+		log.Infof("InitMetrics: OpenTelemetry Prometheus exporter running on %v", address)
+	}
 	metricsPkgInitialized = true
 }
 
