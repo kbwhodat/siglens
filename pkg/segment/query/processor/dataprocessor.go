@@ -471,6 +471,12 @@ loop:
 		waitGroup.Add(1)
 		go func(i int) {
 			defer waitGroup.Done()
+			defer func() { // Paged Out fork: a panic fails this query, never the server
+				if r := recover(); r != nil {
+					finalErr = fmt.Errorf("DP.fetchFromAnyStream: stream %d failed: %v", i, r)
+					dp.streamDataChan <- streamResponse{streamId: i, iqr: nil}
+				}
+			}()
 
 			iqr, err := dp.streams[i].Fetch()
 			if err != nil && err != io.EOF {
@@ -528,6 +534,11 @@ func (dp *DataProcessor) fetchFromAllStreamsWithData() ([]*iqr.IQR, []int, error
 		waitGroup.Add(1)
 		go func(i int, stream *CachedStream) {
 			defer waitGroup.Done()
+			defer func() { // Paged Out fork: a panic fails this query, never the server
+				if r := recover(); r != nil {
+					finalErr = fmt.Errorf("DP.fetchFromAllStreamsWithData: stream %d failed: %v", i, r)
+				}
+			}()
 			iqr, err := stream.Fetch()
 			if err != nil && err != io.EOF {
 				finalErr = utils.WrapErrorf(err, "DP.fetchFromAllStreamsWithData: failed to fetch from stream %d: %v", i, err)

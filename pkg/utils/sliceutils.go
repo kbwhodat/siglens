@@ -169,6 +169,11 @@ func BatchProcess[T any, K comparable, R any](slice []T, batchBy func(T) K,
 		wg.Add(1)
 		go func(key K) {
 			defer wg.Done()
+			defer func() { // Paged Out fork: a panic fails this batch, never the server
+				if r := recover(); r != nil {
+					finalErr = fmt.Errorf("BatchProcess: batch failed: %v", r)
+				}
+			}()
 
 			batch := batches[key]
 			batchResults, err := operation(batch.items)
@@ -456,6 +461,13 @@ func ProcessWithParallelism[T any](parallelism int, items []T, processor func(T)
 	for i := 0; i < parallelism; i++ {
 		go func() {
 			defer waitGroup.Done()
+			defer func() { // Paged Out fork: a panic fails this work, never the server; keep draining
+				if r := recover(); r != nil {
+					finalErr = fmt.Errorf("processor failed: %v", r)
+					for range itemChan {
+					}
+				}
+			}()
 			for item := range itemChan {
 				if err := processor(item); err != nil {
 					finalErr = err
